@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import OrdinalEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+
+column_names = [
+    "Status_Checking_Account", "Duration", "Credit_History", "Purpose", "Credit_Amount",
+    "Savings", "Employment_Since", "Installment_Rate", "Personal_Status_Sex", "Other_Debtors",
+    "Residence_Since", "Property", "Age", "Other_Installment_Plans", "Housing",
+    "Number_Credits", "Job", "People_Maintained", "Telephone", "Foreign_Worker", "Target"
+]
+
+df = pd.read_csv("german.data", sep=' ', header=None, names=column_names)
+
+
+X = df.drop("Target", axis=1)
+y = df["Target"].replace({1: 1, 2: 0})  # 1 = Bon client, 0 = Mauvais client
+
+
+encoder = OrdinalEncoder()
+X_encoded = encoder.fit_transform(X)
+
+
+X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.2, random_state=42)
+
+
+model = RandomForestClassifier(random_state=42)
+model.fit(X_train, y_train)
+
+
+y_pred = model.predict(X_test)
+
+
+print("\nRapport de classification :")
+print(classification_report(y_test, y_pred))
+
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+plt.figure(figsize=(6, 4))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues',
+            xticklabels=['Prédit Mauvais', 'Prédit Bon'],
+            yticklabels=['Réel Mauvais', 'Réel Bon'])
+plt.title("Matrice de confusion")
+plt.xlabel("Prédiction")
+plt.ylabel("Réalité")
+plt.tight_layout()
+plt.show()
